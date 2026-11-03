@@ -484,10 +484,10 @@
   }
 
   async function runIntro() {
-    const token = ++intro.token;
-    const alive = () => token === intro.token;
     if (intro.running) return;
     intro.running = true;
+    const token = ++intro.token;
+    const alive = () => token === intro.token;
 
     document.body.classList.add("locked");
     gate.classList.add("leaving");
