@@ -12,6 +12,9 @@
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const coarse = matchMedia("(pointer: coarse)").matches;
+  /* phones / weak machines get fewer particles, lower dpr, shorter effects */
+  const light = coarse || (navigator.hardwareConcurrency || 8) <= 4;
+  const FX_MAX = light ? 420 : 1000;
   const nf = new Intl.NumberFormat("en-US");
   const vibrate = (n) => { try { navigator.vibrate && navigator.vibrate(n); } catch (e) {} };
 
@@ -43,7 +46,7 @@
     const stars = $("#stars");
     if (!stars) return;
     const frag = document.createDocumentFragment();
-    const count = window.innerWidth < 700 ? 80 : 150;
+    const count = window.innerWidth < 700 ? 45 : 90;
     for (let i = 0; i < count; i++) {
       const s = document.createElement("span");
       const size = rand(0.7, 2.3);
@@ -59,7 +62,7 @@
     // bokeh orbs
     const bokeh = $("#bokeh");
     if (bokeh) {
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 5; i++) {
         const o = document.createElement("span");
         const size = rand(60, 200);
         o.className = "orb";
@@ -98,8 +101,32 @@
     const PARTY = ["#ffd9a0", "#f4c78a", "#ff8fb1", "#ff5c8a", "#b79cff", "#fff7ee", "#8fe3d0", "#ffb26b"];
     const FIRE  = ["#ffe9c9", "#f4c78a", "#ff8fb1", "#b79cff", "#fff7ee", "#ff5c8a"];
 
+    /* pre-rendered glow sprites: same soft sparks, a fraction of ctx.shadowBlur's cost */
+    const glowCache = new Map();
+    const hexA = (hex, a) => {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+    };
+    function glowSprite(color) {
+      let c = glowCache.get(color);
+      if (c) return c;
+      const size = 64, half = size / 2;
+      c = document.createElement("canvas");
+      c.width = size; c.height = size;
+      const g = c.getContext("2d");
+      const grad = g.createRadialGradient(half, half, 0, half, half, half);
+      grad.addColorStop(0, "rgba(255,255,255,.95)");
+      grad.addColorStop(0.2, color);
+      grad.addColorStop(0.5, hexA(color, 0.4));
+      grad.addColorStop(1, hexA(color, 0));
+      g.fillStyle = grad;
+      g.fillRect(0, 0, size, size);
+      glowCache.set(color, c);
+      return c;
+    }
+
     function resize() {
-      DPR = Math.min(window.devicePixelRatio || 1, 2);
+      DPR = Math.min(window.devicePixelRatio || 1, light ? 1.5 : 2);
       W = window.innerWidth;
       H = window.innerHeight;
       canvas.width = Math.floor(W * DPR);
@@ -117,7 +144,7 @@
     }
 
     function add(p) {
-      if (parts.length > 1200) parts.splice(0, 120);
+      if (parts.length > FX_MAX) parts.splice(0, 140);
       parts.push(p);
       ensureLoop();
     }
@@ -215,6 +242,7 @@
       const t0 = performance.now();
       rainTimer = setInterval(() => {
         if (performance.now() - t0 > ms) { clearInterval(rainTimer); return; }
+        if (document.hidden) return;
         confetti(rand(0, W), -20, {
           count: 3,
           angle: Math.PI / 2,
@@ -229,6 +257,7 @@
 
     function loop() {
       raf = null;
+      if (document.hidden) return; // resumed by the visibility handler
       ctx.clearRect(0, 0, W, H);
       for (let i = parts.length - 1; i >= 0; i--) {
         const p = parts[i];
@@ -252,12 +281,8 @@
         ctx.translate(p.x + drift, p.y);
 
         if (p.kind === "spark") {
-          ctx.shadowBlur = 12;
-          ctx.shadowColor = p.color;
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc(0, 0, p.r, 0, Math.PI * 2);
-          ctx.fill();
+          const s = p.r * 5;
+          ctx.drawImage(glowSprite(p.color), -s / 2, -s / 2, s, s);
         } else {
           ctx.rotate(p.rot);
           ctx.fillStyle = p.color;
@@ -282,21 +307,24 @@
       firework,
       sparkle,
       rain,
+      resume() { if (parts.length) ensureLoop(); },
       party() {
-        confetti(W * 0.5, H * 0.62, { count: 70, angle: -Math.PI / 2, spread: 2.4, power: 18, gravity: 0.26 });
-        confetti(W * 0.08, H + 10, { count: 60, angle: -Math.PI / 3.1, spread: 0.75, power: 24 });
-        confetti(W * 0.92, H + 10, { count: 60, angle: -Math.PI + Math.PI / 3.1, spread: 0.75, power: 24 });
+        const k = light ? 0.62 : 1;
+        confetti(W * 0.5, H * 0.62, { count: Math.round(70 * k), angle: -Math.PI / 2, spread: 2.4, power: 18, gravity: 0.26 });
+        confetti(W * 0.08, H + 10, { count: Math.round(60 * k), angle: -Math.PI / 3.1, spread: 0.75, power: 24 });
+        confetti(W * 0.92, H + 10, { count: Math.round(60 * k), angle: -Math.PI + Math.PI / 3.1, spread: 0.75, power: 24 });
       },
       celebrate() {
+        const k = light ? 0.6 : 1;
         const y = H * 0.4;
-        firework(W * 0.22, y, { count: 70 });
-        firework(W * 0.5, y * 0.75, { count: 80, power: 8 });
-        firework(W * 0.78, y, { count: 70 });
+        firework(W * 0.22, y, { count: Math.round(70 * k) });
+        firework(W * 0.5, y * 0.75, { count: Math.round(80 * k), power: 8 });
+        firework(W * 0.78, y, { count: Math.round(70 * k) });
       },
       burstAt(el) {
         const r = el.getBoundingClientRect();
         confetti(r.left + r.width / 2, r.top + r.height / 2, {
-          count: 60, angle: -Math.PI / 2, spread: 2.2, power: 15
+          count: light ? 36 : 60, angle: -Math.PI / 2, spread: 2.2, power: 15
         });
       }
     };
@@ -345,6 +373,8 @@
       if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
       if (unlocked) return;
       unlocked = true;
+      // start buffering the song now (preload is off until the visitor asks for it)
+      try { songEl.preload = "auto"; } catch (e) {}
       // prime the media element inside the user gesture so later playback is allowed
       try {
         const prev = songEl.volume;
@@ -427,7 +457,7 @@
   function spawnBalloon(prewarm) {
     if (document.hidden || reduced) return;
     const narrow = window.innerWidth < 700;
-    if (balloons.children.length > (narrow ? 7 : 12)) return;
+    if (balloons.children.length > (narrow ? 5 : 8)) return;
     const [c1, c2] = pick(PALETTE);
     const el = document.createElement("div");
     el.className = "balloon";
@@ -450,8 +480,8 @@
   function startBalloons() {
     if (balloonTimer) return;
     const narrow = window.innerWidth < 700;
-    for (let i = 0; i < 5; i++) setTimeout(() => spawnBalloon(i < (narrow ? 2 : 4)), i * 200);
-    balloonTimer = setInterval(() => spawnBalloon(false), narrow ? 2800 : 1700);
+    for (let i = 0; i < 4; i++) setTimeout(() => spawnBalloon(i < (narrow ? 2 : 3)), i * 220);
+    balloonTimer = setInterval(() => spawnBalloon(false), narrow ? 3400 : 2400);
   }
   function stopBalloons() {
     clearInterval(balloonTimer);
@@ -568,6 +598,7 @@
     });
 
     player.hidden = false;
+    updateStats();
     startBalloons();
     FX.party();
     setTimeout(() => FX.rain(2400), 500);
@@ -601,6 +632,7 @@
   const statSeconds = $("#statSeconds");
 
   function updateStats() {
+    if (main.hidden || document.hidden) return;
     const now = Date.now();
     const ms = Math.max(0, now - BIRTH);
     const d = new Date(now);
@@ -650,24 +682,33 @@
   }
 
   /* ---------- cursor glow + sparkle trail ---------- */
-  if (!coarse) {
+  if (!coarse && !reduced) {
     let gx = window.innerWidth / 2, gy = window.innerHeight / 2;
-    let cx = gx, cy = gy, lastSpark = 0, shown = false;
-    addEventListener("pointermove", (e) => {
-      gx = e.clientX; gy = e.clientY;
-      if (!shown) { glow.style.opacity = "1"; shown = true; }
-      const now = performance.now();
-      if (now - lastSpark > 45) {
-        lastSpark = now;
-        FX.sparkle(e.clientX, e.clientY);
-      }
-    }, { passive: true });
-    (function follow() {
+    let cx = gx, cy = gy, lastSpark = 0, shown = false, running = false, idleUntil = 0;
+
+    function follow() {
       cx += (gx - cx) * 0.12;
       cy += (gy - cy) * 0.12;
       glow.style.transform = `translate3d(${cx.toFixed(1)}px,${cy.toFixed(1)}px,0)`;
+      // settled + idle → park the animation frame until the next move
+      if (performance.now() > idleUntil && Math.abs(gx - cx) < 0.4 && Math.abs(gy - cy) < 0.4) {
+        running = false;
+        return;
+      }
       requestAnimationFrame(follow);
-    })();
+    }
+
+    addEventListener("pointermove", (e) => {
+      gx = e.clientX; gy = e.clientY;
+      idleUntil = performance.now() + 700;
+      if (!shown) { glow.style.opacity = "1"; shown = true; }
+      const now = performance.now();
+      if (!light && now - lastSpark > 80) {
+        lastSpark = now;
+        FX.sparkle(e.clientX, e.clientY);
+      }
+      if (!running) { running = true; requestAnimationFrame(follow); }
+    }, { passive: true });
   }
 
   /* ---------- cake ---------- */
@@ -707,11 +748,23 @@
   });
 
   /* ---------- scroll progress ---------- */
+  let scrollTick = false;
   addEventListener("scroll", () => {
-    const h = document.documentElement;
-    const max = h.scrollHeight - h.clientHeight;
-    scrollBar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0).toFixed(2) + "%";
+    if (scrollTick) return;
+    scrollTick = true;
+    requestAnimationFrame(() => {
+      scrollTick = false;
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      scrollBar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0).toFixed(2) + "%";
+    });
   }, { passive: true });
+
+  /* ---------- stop the world when the tab is in the background ---------- */
+  document.addEventListener("visibilitychange", () => {
+    document.body.classList.toggle("tab-hidden", document.hidden);
+    if (!document.hidden) FX.resume();
+  });
 
   /* ---------- player ---------- */
   playBtn.addEventListener("click", () => {

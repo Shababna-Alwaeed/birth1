@@ -69,8 +69,10 @@ img{max-width:100%}
   background-size:220% 100%;
   -webkit-background-clip:text;background-clip:text;
   color:transparent;
-  animation:shimmer 9s ease-in-out infinite;
-  filter:drop-shadow(0 10px 34px rgba(255,143,177,.22));
+}
+/* the shimmer repaints a huge clipped-text layer — desktop only */
+@media (min-width:981px){
+  .script{animation:shimmer 11s ease-in-out infinite}
 }
 .btn{
   position:relative;
@@ -105,16 +107,16 @@ img{max-width:100%}
    ambient layers
    ========================================================================== */
 .bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+/* soft gradients instead of `filter:blur(90px)` — same look, a fraction of the cost */
 .aurora{
   position:absolute;border-radius:50%;
-  filter:blur(90px);
-  opacity:.55;
-  mix-blend-mode:screen;
+  opacity:.62;
+  transform:translateZ(0);
   will-change:transform;
 }
-.a1{width:70vw;height:70vw;left:-18vw;top:-22vw;background:radial-gradient(circle,rgba(122,70,220,.55),transparent 68%);animation:drift1 26s ease-in-out infinite alternate}
-.a2{width:60vw;height:60vw;right:-16vw;top:4vh;background:radial-gradient(circle,rgba(255,92,138,.34),transparent 68%);animation:drift2 31s ease-in-out infinite alternate}
-.a3{width:66vw;height:66vw;left:20vw;bottom:-34vw;background:radial-gradient(circle,rgba(244,199,138,.24),transparent 70%);animation:drift3 36s ease-in-out infinite alternate}
+.a1{width:70vw;height:70vw;left:-18vw;top:-22vw;background:radial-gradient(circle,rgba(122,70,220,.5) 0%,rgba(122,70,220,.36) 18%,rgba(122,70,220,.24) 34%,rgba(122,70,220,.14) 48%,rgba(122,70,220,.07) 60%,rgba(122,70,220,.03) 70%,rgba(122,70,220,.008) 79%,transparent 88%);animation:drift1 26s ease-in-out infinite alternate}
+.a2{width:60vw;height:60vw;right:-16vw;top:4vh;background:radial-gradient(circle,rgba(255,92,138,.33) 0%,rgba(255,92,138,.24) 18%,rgba(255,92,138,.16) 34%,rgba(255,92,138,.09) 48%,rgba(255,92,138,.05) 60%,rgba(255,92,138,.02) 70%,rgba(255,92,138,.006) 79%,transparent 88%);animation:drift2 31s ease-in-out infinite alternate}
+.a3{width:66vw;height:66vw;left:20vw;bottom:-34vw;background:radial-gradient(circle,rgba(244,199,138,.26) 0%,rgba(244,199,138,.19) 18%,rgba(244,199,138,.12) 34%,rgba(244,199,138,.07) 48%,rgba(244,199,138,.035) 60%,rgba(244,199,138,.015) 70%,rgba(244,199,138,.005) 79%,transparent 88%);animation:drift3 36s ease-in-out infinite alternate}
 @keyframes drift1{to{transform:translate3d(8vw,6vh,0) scale(1.15)}}
 @keyframes drift2{to{transform:translate3d(-7vw,9vh,0) scale(1.1)}}
 @keyframes drift3{to{transform:translate3d(4vw,-8vh,0) scale(1.2)}}
@@ -126,7 +128,6 @@ img{max-width:100%}
   opacity:0;
   animation:twinkle var(--t) ease-in-out infinite;
   animation-delay:var(--d);
-  box-shadow:0 0 6px 1px rgba(255,255,255,.35);
 }
 @keyframes twinkle{0%,100%{opacity:.08;transform:scale(.7)}50%{opacity:var(--o);transform:scale(1.15)}}
 
@@ -149,24 +150,25 @@ img{max-width:100%}
 .bokeh{position:absolute;inset:0}
 .orb{
   position:absolute;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%,rgba(255,238,214,.5),rgba(255,200,150,.12) 45%,transparent 70%);
-  filter:blur(2px);
-  opacity:.35;
+  background:radial-gradient(circle at 42% 40%,
+    rgba(255,236,205,.5) 0%,
+    rgba(255,214,175,.28) 22%,
+    rgba(255,200,155,.15) 40%,
+    rgba(255,190,145,.07) 56%,
+    rgba(255,185,140,.025) 70%,
+    rgba(255,185,140,.006) 82%,
+    transparent 94%);
+  opacity:.26;
   animation:floaty var(--t) ease-in-out infinite alternate;
   animation-delay:var(--d);
 }
 @keyframes floaty{from{transform:translateY(0) scale(1)}to{transform:translateY(-38px) scale(1.08)}}
 
+/* one static noise layer — no full-screen blend mode, no repaint loop */
 .grain{
-  position:absolute;inset:-50%;
+  position:absolute;inset:0;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
-  opacity:.05;
-  mix-blend-mode:overlay;
-  animation:grainShift 8s steps(6) infinite;
-}
-@keyframes grainShift{
-  0%{transform:translate(0,0)}20%{transform:translate(-2%,1%)}40%{transform:translate(1%,-2%)}
-  60%{transform:translate(-1%,2%)}80%{transform:translate(2%,1%)}100%{transform:translate(0,0)}
+  opacity:.06;
 }
 .vignette{
   position:absolute;inset:0;
@@ -191,7 +193,6 @@ img{max-width:100%}
   position:absolute;bottom:-260px;
   width:var(--w);
   animation:balloonRise var(--dur) linear forwards;
-  will-change:transform;
 }
 .balloon-inner{animation:balloonSway var(--sway,5s) ease-in-out infinite alternate;display:block}
 .balloon-body{
@@ -201,7 +202,7 @@ img{max-width:100%}
     radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.9),rgba(255,255,255,0) 38%),
     radial-gradient(ellipse at 72% 84%,rgba(70,10,40,.2),transparent 62%),
     linear-gradient(160deg,var(--c1),var(--c2));
-  box-shadow:inset -8px -14px 26px rgba(90,10,50,.28),0 10px 34px -10px var(--c2);
+  box-shadow:inset -6px -10px 18px rgba(90,10,50,.26),0 8px 22px -12px var(--c2);
   opacity:1;
 }
 .balloon-body::after{
@@ -227,12 +228,10 @@ img{max-width:100%}
   overflow:hidden;
 }
 .gate{
-  background:rgba(6,4,12,.34);
-  -webkit-backdrop-filter:blur(2px);
-  backdrop-filter:blur(2px);
-  transition:opacity .7s var(--ease),filter .7s var(--ease);
+  background:rgba(6,4,12,.55);
+  transition:opacity .6s var(--ease),transform .6s var(--ease);
 }
-.gate.leaving{opacity:0;filter:blur(14px);pointer-events:none}
+.gate.leaving{opacity:0;transform:scale(1.03);pointer-events:none}
 .gate-inner{position:relative;z-index:2;max-width:660px;text-align:center;animation:gateIn 1.2s var(--ease-out) both}
 .gate-title{
   margin:1.1rem 0 1.1rem;
@@ -258,7 +257,7 @@ img{max-width:100%}
   border:1px solid rgba(255,143,177,.10);
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes gateIn{from{opacity:0;transform:translateY(24px);filter:blur(10px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes gateIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 
 /* ==========================================================================
    1 · countdown
@@ -272,15 +271,15 @@ img{max-width:100%}
   letter-spacing:-.04em;
   background:linear-gradient(180deg,#fff8ec 10%,var(--gold) 55%,var(--rose) 105%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 70px rgba(255,170,120,.4));
+  filter:drop-shadow(0 0 32px rgba(255,170,120,.32));
   padding:.06em .05em;
 }
 .cd-num.tick{animation:cdPop .84s var(--ease-out)}
 @keyframes cdPop{
-  0%{opacity:0;transform:scale(.62) translateY(16px);filter:blur(18px)}
-  24%{opacity:1;transform:scale(1.02) translateY(0);filter:blur(0)}
-  72%{opacity:1;transform:scale(1);filter:blur(0)}
-  100%{opacity:.92;transform:scale(1.05);filter:blur(1px)}
+  0%{opacity:0;transform:scale(.72) translateY(12px)}
+  26%{opacity:1;transform:scale(1.02) translateY(0)}
+  72%{opacity:1;transform:scale(1)}
+  100%{opacity:.94;transform:scale(1.05)}
 }
 .cd-label{
   margin-top:2.2rem;font-size:.68rem;letter-spacing:.5em;text-transform:uppercase;
@@ -312,7 +311,7 @@ img{max-width:100%}
    2 · name reveal
    ========================================================================== */
 .reveal{background:radial-gradient(circle at 50% 46%,rgba(38,18,68,.36),rgba(4,2,9,.72) 74%);transition:opacity .8s var(--ease),filter .8s}
-.reveal.leaving{opacity:0;filter:blur(16px)}
+.reveal.leaving{opacity:0;transform:scale(1.02)}
 .reveal-inner{position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center;max-width:min(94vw,1100px)}
 .rv-pre{
   font-family:var(--serif);font-weight:300;font-style:italic;
@@ -329,17 +328,16 @@ img{max-width:100%}
   margin:.1em 0 .05em;
   background:linear-gradient(180deg,#fff7e9,var(--gold) 70%,#d9a468);
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  opacity:0;transform:scale(.86);filter:blur(12px);
-  transition:opacity .55s var(--ease),transform .7s var(--ease-out),filter .55s,text-decoration-color .4s;
+  opacity:0;transform:scale(.9) translateY(8px);
+  transition:opacity .55s var(--ease),transform .7s var(--ease-out),text-decoration-color .4s;
 }
-.rv-name.in{opacity:1;transform:scale(1);filter:blur(0)}
+.rv-name.in{opacity:1;transform:scale(1)}
 .reveal.oops .rv-name{
   text-decoration:line-through;
   text-decoration-color:var(--rose);
   text-decoration-thickness:3px;
   opacity:.5;
   transform:scale(.8) rotate(-1.5deg);
-  filter:blur(1.2px);
 }
 .rv-oops{
   font-family:var(--serif);font-style:italic;font-size:clamp(1rem,2vw,1.4rem);
@@ -354,10 +352,10 @@ img{max-width:100%}
   line-height:1.05;
   margin-top:.15em;
   color:var(--cream);
-  opacity:0;transform:translateY(26px) scale(.96);filter:blur(8px);
-  transition:opacity .7s var(--ease),transform .8s var(--ease-out),filter .7s;
+  opacity:0;transform:translateY(26px) scale(.96);
+  transition:opacity .7s var(--ease),transform .8s var(--ease-out);
 }
-.rv-correct.in{opacity:1;transform:none;filter:blur(0)}
+.rv-correct.in{opacity:1;transform:none}
 .rv-correct .script{font-size:1.34em;line-height:.8;display:inline-block;transform:translateY(.04em)}
 .rv-sub{
   margin-top:1.6rem;font-size:clamp(.82rem,1.5vw,1rem);
@@ -398,8 +396,7 @@ img{max-width:100%}
   position:fixed;top:0;left:0;right:0;z-index:40;
   display:flex;align-items:center;justify-content:space-between;gap:1rem;
   padding:1.1rem var(--pad);
-  background:linear-gradient(180deg,rgba(6,4,12,.72),rgba(6,4,12,0));
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  background:linear-gradient(180deg,rgba(8,5,16,.92),rgba(8,5,16,.55) 62%,rgba(8,5,16,0));
   border-bottom:1px solid rgba(253,246,236,.05);
 }
 .nav-mark{
@@ -437,7 +434,7 @@ img{max-width:100%}
 .hero::before{
   content:"";position:absolute;left:-18%;top:0;width:72vw;height:64vh;
   background:radial-gradient(circle at 42% 44%,rgba(255,168,140,.13),rgba(183,156,255,.07) 45%,transparent 68%);
-  filter:blur(50px);pointer-events:none;z-index:0;
+  pointer-events:none;z-index:0;
 }
 .hero-copy .eyebrow{margin-bottom:1.3rem}
 .hero-title{
@@ -480,8 +477,7 @@ img{max-width:100%}
   padding:.7rem 1.05rem;
   border:1px solid var(--line);
   border-radius:14px;
-  background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.02));
 }
 .stat b{
   font-family:var(--serif);font-weight:500;
@@ -585,7 +581,6 @@ img{max-width:100%}
   border-left:1px solid rgba(255,255,255,.35);
   border-right:1px solid rgba(255,255,255,.2);
   box-shadow:0 4px 14px rgba(0,0,0,.25);
-  -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
 }
 .tape-tl{top:-13px;left:-26px;transform:rotate(-38deg)}
 .tape-br{bottom:-13px;right:-26px;transform:rotate(-38deg)}
@@ -650,8 +645,8 @@ img{max-width:100%}
 .wish::before{
   content:"";position:absolute;left:50%;top:50%;translate:-50% -50%;
   width:min(900px,120vw);aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,143,177,.14),rgba(183,156,255,.06) 45%,transparent 68%);
-  filter:blur(30px);pointer-events:none;
+  background:radial-gradient(circle,rgba(255,143,177,.16),rgba(183,156,255,.07) 45%,transparent 68%);
+  pointer-events:none;
 }
 .wish-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center}
 .sec-title{
@@ -678,8 +673,7 @@ img{max-width:100%}
 .cake-halo{
   position:absolute;left:50%;top:44%;translate:-50% -50%;
   width:420px;height:420px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,196,140,.22),rgba(255,143,177,.08) 45%,transparent 66%);
-  filter:blur(20px);
+  background:radial-gradient(circle,rgba(255,196,140,.24),rgba(255,143,177,.09) 45%,transparent 66%);
   animation:haloPulse 4.5s ease-in-out infinite;
   pointer-events:none;
 }
@@ -816,7 +810,7 @@ img{max-width:100%}
 .letter::after{
   content:"";position:absolute;inset:0;pointer-events:none;border-radius:3px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='.5'/%3E%3C/svg%3E");
-  opacity:.06;mix-blend-mode:multiply;
+  opacity:.07;
 }
 .letter p{margin-bottom:1.1em}
 .letter em{font-style:italic;color:#9b4d63}
@@ -845,6 +839,7 @@ img{max-width:100%}
 .marquee{
   position:relative;
   overflow:hidden;
+  contain:paint;
   border-top:1px solid var(--line);
   border-bottom:1px solid var(--line);
   padding:clamp(16px,2.4vw,26px) 0;
@@ -855,6 +850,7 @@ img{max-width:100%}
 .marquee-track{
   display:flex;align-items:center;gap:2.4rem;width:max-content;
   animation:marquee 44s linear infinite;
+  transform:translateZ(0);
 }
 .marquee-track span{
   font-family:var(--serif);font-style:italic;font-weight:400;
@@ -885,10 +881,8 @@ img{max-width:100%}
   display:flex;align-items:center;gap:.8rem;
   padding:.5rem 1.15rem .5rem .5rem;
   border-radius:999px;
-  background:rgba(12,8,22,.55);
+  background:rgba(12,8,22,.88);
   border:1px solid rgba(253,246,236,.12);
-  -webkit-backdrop-filter:blur(18px) saturate(140%);
-  backdrop-filter:blur(18px) saturate(140%);
   box-shadow:0 18px 40px -18px rgba(0,0,0,.8);
   animation:playerIn 1s var(--ease-out) both .8s;
 }
@@ -977,6 +971,35 @@ img{max-width:100%}
   .gate-sub{display:none}
   .gate-title{font-size:2rem}
   .hero{min-height:auto;padding-top:90px}
+}
+
+/* ==========================================================================
+   performance guardrails
+   ========================================================================== */
+/* nothing keeps animating while the tab is in the background */
+body.tab-hidden .aurora,
+body.tab-hidden .star,
+body.tab-hidden .orb,
+body.tab-hidden .balloon,
+body.tab-hidden .balloon-inner,
+body.tab-hidden .marquee-track,
+body.tab-hidden .gate-ring,
+body.tab-hidden .badge-18,
+body.tab-hidden .flame,
+body.tab-hidden .eq i,
+body.tab-hidden .cake-halo,
+body.tab-hidden .drift-heart,
+body.tab-hidden .scroll-cue i{animation-play-state:paused}
+
+/* lighter shadows on phones — same look, far less raster work */
+@media (max-width:760px){
+  .polaroid{box-shadow:0 28px 56px -26px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.4) inset}
+  .letter{box-shadow:0 28px 54px -26px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.55) inset}
+  .tier{box-shadow:inset 0 -12px 20px rgba(170,50,90,.14),inset 0 2px 0 rgba(255,255,255,.5),0 16px 30px -16px rgba(255,120,160,.4)}
+  .flame{filter:drop-shadow(0 0 9px rgba(255,170,80,.7))}
+  .cd-num{filter:drop-shadow(0 0 20px rgba(255,170,120,.25))}
+  .badge-18{box-shadow:0 10px 24px -10px rgba(244,199,138,.7),inset 0 1px 0 rgba(255,255,255,.8)}
+  .player{box-shadow:0 10px 26px -14px rgba(0,0,0,.85)}
 }
 
 /* ---------- reduced motion ---------- */
