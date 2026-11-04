@@ -1,6 +1,6 @@
 # birth
 
-A small, slightly over-engineered birthday site — built for **Marwa**, 03.11.
+A small, slightly over-engineered birthday site — built for **abdo**, 03.11.
 
 No frameworks. No build step. No dependencies. Just HTML, CSS, a canvas and a lot of
 hand-written vanilla JavaScript.
