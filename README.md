@@ -36,7 +36,7 @@ python -m http.server 5173
 1. **A gate** — one tap, because browsers refuse to play music without one.
 2. **5 → 0** — big cinematic countdown with a soft tick per number.
 3. **"Happy Birthday, Nada"** — …then a pause, a strikethrough, *"…wait."*
-4. **"I mean — Marwa"** — and the song starts exactly on the correction.
+4. **"I mean — Abdo"** — and the song starts exactly on the correction.
 5. **The site** — confetti cannons, fireworks, balloons, a polaroid that tilts with
    the cursor, a cake with **18** candles you can blow out, a letter, a multilingual
    marquee, and a live counter of every second she has existed.
@@ -62,7 +62,7 @@ sparkle trail, floating hearts, a music equaliser.
 index.html?pose=countdown
 index.html?pose=nada
 index.html?pose=oops
-index.html?pose=marwa
+index.html?pose=Abdo
 index.html?pose=main
 ```
 
